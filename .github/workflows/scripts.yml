@@ -1,0 +1,29 @@
+name: Run Check All
+
+on: [pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Run check_all.sh
+      id: check-all
+      run: |
+        sudo chmod +x ./scripts/check_all.sh
+        sudo ./scripts/check_all.sh
+        echo ::set-output name=logs::$(sudo cat logs/openIM.log 2>/dev/null)
+      shell: bash
+
+    - name: Create PR comment
+      uses: peter-evans/create-or-update-comment@v1
+      with:
+        token: ${{ secrets.BOT_GITHUB_TOKEN }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          ```
+          ${{ steps.check-all.outputs.logs }}
+          ```
